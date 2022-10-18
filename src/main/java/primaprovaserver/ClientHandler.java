@@ -1,11 +1,15 @@
 package primaprovaserver;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class ClientHandler extends Thread{
     private Socket socket;
+    static private ArrayList usersList = new ArrayList<String>();
+    static private ArrayList passList = new ArrayList<String>();
     public ClientHandler(Socket socket){
         this.socket = socket;
     }
@@ -17,7 +21,7 @@ public class ClientHandler extends Thread{
             InputStreamReader streamReader = new InputStreamReader(socket.getInputStream());
             BufferedReader bufferReader = new BufferedReader(streamReader);
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-            printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2)stop");
+            printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2) registrazione, 3) accesso, 4)stop");
             gestore(printWriter, bufferReader);
             socket.close();
             System.out.println("Client disconnected.");
@@ -34,6 +38,10 @@ public class ClientHandler extends Thread{
             }else if(str.equals("stop")){
                 printWriter.println("Disconnesso");
                 return;
+            }else if(str.equals("accesso")){
+                accesso(printWriter, bufferedReader);
+            }else if(str.equals("registrazione")){
+                registrazione(printWriter, bufferedReader);
             }else{
                 printWriter.println("Comando: " + str + " non riconosciuto.");
             }
@@ -67,5 +75,84 @@ public class ClientHandler extends Thread{
         }
             System.out.println(bmi);
             return;
+    }
+
+    public static void accesso(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
+        boolean exit = false;
+        printWriter.println("Comandi possibili: 1)nome 'userName', 2)stop");
+        while (!exit) {
+            String str = bufferedReader.readLine();
+            String[] words = str.split(" ");
+            if(words[0].equals("nome")){
+                if(checkName(words[1].toUpperCase())){
+                    if(cell(words[1].toUpperCase()) > -1){
+                        int n = cell(words[1].toUpperCase());
+                        printWriter.println("Inserire password");
+                        String psw = bufferedReader.readLine();
+                        if(cellpsw(n,psw)){
+                            String name = (String) usersList.get(n);
+                            printWriter.println("Bentornato " + name.toLowerCase());
+                        }
+                    }
+                }
+                printWriter.println("Nome o password sbagliati");
+            }else if(words[0].equals("stop")){
+                printWriter.println("Uscito dal'accesso");
+                return;
+            }else{
+                printWriter.println("Comando: " + str + "non riconosciuto.");
+            }
+        }
+    }
+
+    public static void registrazione(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
+        boolean exit = false;
+        printWriter.println("Comandi possibili: 1)nome 'userName', 2)stop");
+        while (!exit) {
+            String str = bufferedReader.readLine();
+            String[] words = str.split(" ");
+            if(words[0].equals("nome")){
+                if(checkName(words[1].toUpperCase())){
+                    printWriter.println("Nome gia' in uso");
+                }
+                usersList.add(words[1].toUpperCase());
+                printWriter.println("Inserire password");
+                String psw = bufferedReader.readLine();
+                passList.add(psw);
+                printWriter.println("Registrazione effettuata sei l'utente numero: " + usersList.size());
+                return;
+            }else if(words[0].equals("stop")){
+                printWriter.println("Uscito dalla registrazione");
+                return;
+            }else{
+                printWriter.println("Comando: " + str + "non riconosciuto.");
+            }
+        }
+
+    }
+
+    public static boolean checkName(String name){
+        for(int i = 0; i < usersList.size(); i++){
+            if(usersList.get(i).equals(name)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static int cell(String name){
+        for(int i = 0; i < usersList.size(); i++){
+            if(usersList.get(i).equals(name)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public static boolean cellpsw(int i, String psw){
+        if (passList.get(i).equals(psw)) {
+            return true;
+        }
+        return false;
     }
 }
