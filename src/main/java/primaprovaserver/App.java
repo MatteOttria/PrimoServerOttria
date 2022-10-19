@@ -7,9 +7,10 @@ public class App
     {
         try(ServerSocket serverSocket = new ServerSocket(1723)){
             System.out.println("Server opened.");
+            String serverSocketName = "Serverozzo";
             while(true){
                 Socket socket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(socket);
+                ClientHandler clientHandler = new ClientHandler(socket, serverSocketName);
                 clientHandler.start();
             }   
         }catch (Exception e){

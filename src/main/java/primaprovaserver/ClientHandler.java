@@ -1,18 +1,22 @@
 package primaprovaserver;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class ClientHandler extends Thread{
     private Socket socket;
+    static private String serverName;
     static private ArrayList usersList = new ArrayList<String>();
     static private ArrayList passList = new ArrayList<String>();
     static private ArrayList idList = new ArrayList<Integer>();
-    public ClientHandler(Socket socket){
+    public ClientHandler(Socket socket, String serverName){
         this.socket = socket;
+        this.serverName = serverName;
     }
 
     @Override
@@ -22,7 +26,7 @@ public class ClientHandler extends Thread{
             InputStreamReader streamReader = new InputStreamReader(socket.getInputStream());
             BufferedReader bufferReader = new BufferedReader(streamReader);
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-            printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2) registrazione, 3) accesso, 4)stop");
+            printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2) registrazione, 3) accesso, 4)data, 5) server, 6)stop");
             gestore(printWriter, bufferReader);
             socket.close();
             System.out.println("Client disconnected.");
@@ -43,6 +47,10 @@ public class ClientHandler extends Thread{
                 accesso(printWriter, bufferedReader);
             }else if(str.equals("registrazione")){
                 registrazione(printWriter, bufferedReader);
+            }else if(str.equals("data")){
+                data(printWriter, bufferedReader);
+            }else if(str.equals("server")){
+                printWriter.println("Nome server: " + serverName);
             }else{
                 printWriter.println("Comando: " + str + " non riconosciuto.");
             }
@@ -71,7 +79,7 @@ public class ClientHandler extends Thread{
                 printWriter.println("Uscito dal calcolo");
                 return;
             }else{
-                printWriter.println("Comando: " + str + "non riconosciuto.");
+                printWriter.println("Comando: " + str + " non riconosciuto.");
             }
         }
             System.out.println(bmi);
@@ -101,7 +109,7 @@ public class ClientHandler extends Thread{
                 printWriter.println("Uscito dal'accesso");
                 return;
             }else{
-                printWriter.println("Comando: " + str + "non riconosciuto.");
+                printWriter.println("Comando: " + str + " non riconosciuto.");
             }
         }
     }
@@ -127,10 +135,29 @@ public class ClientHandler extends Thread{
                 printWriter.println("Uscito dalla registrazione");
                 return;
             }else{
-                printWriter.println("Comando: " + str + "non riconosciuto.");
+                printWriter.println("Comando: " + str + " non riconosciuto.");
             }
         }
 
+    }
+
+    public static void data(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
+        boolean exit = false;
+        printWriter.println("Comandi possibili: 1)giorno, 2)ora, 3)stop");
+        while (!exit) {
+            String str = bufferedReader.readLine();
+            if(str.equals("giorno")){
+                LocalDate date = LocalDate.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");;
+                printWriter.println("Giorno: " + date.format(formatter));
+            }else if(str.equals("ora")){
+                LocalTime time = LocalTime.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                printWriter.println(time.format(formatter));
+            }else{
+                printWriter.println("Comando: " + str + " non riconosciuto.");
+            }
+        }
     }
 
     public static boolean checkName(String name){
