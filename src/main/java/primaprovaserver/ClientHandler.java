@@ -10,6 +10,7 @@ public class ClientHandler extends Thread{
     private Socket socket;
     static private ArrayList usersList = new ArrayList<String>();
     static private ArrayList passList = new ArrayList<String>();
+    static private ArrayList idList = new ArrayList<Integer>();
     public ClientHandler(Socket socket){
         this.socket = socket;
     }
@@ -91,7 +92,7 @@ public class ClientHandler extends Thread{
                         String psw = bufferedReader.readLine();
                         if(cellpsw(n,psw)){
                             String name = (String) usersList.get(n);
-                            printWriter.println("Bentornato " + name.toLowerCase());
+                            printWriter.println("Bentornato " + name.toLowerCase() + ", ID: " + idList.get(n));
                         }
                     }
                 }
@@ -119,7 +120,8 @@ public class ClientHandler extends Thread{
                 printWriter.println("Inserire password");
                 String psw = bufferedReader.readLine();
                 passList.add(psw);
-                printWriter.println("Registrazione effettuata sei l'utente numero: " + usersList.size());
+                idList.add(usersList.size());
+                printWriter.println("Registrazione effettuata, ID: " + idList.get(usersList.size() - 1));
                 return;
             }else if(words[0].equals("stop")){
                 printWriter.println("Uscito dalla registrazione");
