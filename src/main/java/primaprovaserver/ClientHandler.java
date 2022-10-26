@@ -7,16 +7,23 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 
 public class ClientHandler extends Thread{
     private Socket socket;
     static private String serverName;
-    static private ArrayList usersList = new ArrayList<String>();
-    static private ArrayList passList = new ArrayList<String>();
-    static private ArrayList idList = new ArrayList<Integer>();
-    public ClientHandler(Socket socket, String serverName){
+    static private ArrayList<String> usersList = new ArrayList<String>();
+    static private ArrayList<String> passList = new ArrayList<String>();
+    static private ArrayList<Integer> idList = new ArrayList<Integer>();
+    static private ArrayList<ClientHandler> handlerList = new ArrayList<ClientHandler>();
+    public ClientHandler(Socket socket, String serverName, ArrayList<ClientHandler> handlerList){
         this.socket = socket;
         this.serverName = serverName;
+        this.handlerList = handlerList;
+    }
+
+    public Socket getSocket(){
+        return this.socket;
     }
 
     @Override
@@ -26,10 +33,9 @@ public class ClientHandler extends Thread{
             InputStreamReader streamReader = new InputStreamReader(socket.getInputStream());
             BufferedReader bufferReader = new BufferedReader(streamReader);
             PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-            printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2) registrazione, 3) accesso, 4)data, 5) server, 6)stop");
+            printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2) registrazione, 3) accesso, 4)data, 5) server, 6)stop, 7)esplodi");
             gestore(printWriter, bufferReader);
             socket.close();
-            System.out.println("Client disconnected.");
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -42,6 +48,7 @@ public class ClientHandler extends Thread{
                 massaCorporea(printWriter,bufferedReader);
             }else if(str.equals("stop")){
                 printWriter.println("Disconnesso");
+                System.out.println("Client disconnected.");
                 return;
             }else if(str.equals("accesso")){
                 accesso(printWriter, bufferedReader);
@@ -51,10 +58,22 @@ public class ClientHandler extends Thread{
                 data(printWriter, bufferedReader);
             }else if(str.equals("server")){
                 printWriter.println("Nome server: " + serverName);
+            }else if(str.equals("esplodi")){
+                clientsCloser(printWriter, bufferedReader);
+                return;
             }else{
                 printWriter.println("Comando: " + str + " non riconosciuto.");
             }
         }
+    }
+
+    public static void clientsCloser(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
+        printWriter.println("Chiusura di tutti i client");
+        for (int i = 0; i < handlerList.size(); i++) {
+            handlerList.get(i).getSocket().close();
+            System.out.println("Client disconnected.");
+        }
+        return;
     }
 
     public static void massaCorporea(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
