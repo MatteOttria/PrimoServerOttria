@@ -7,10 +7,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
+import java.util.logging.Handler;
 
 public class ClientHandler extends Thread{
-    private Socket socket;
+    private static Socket socket;
+    PrintWriter printWriter;
     static private String serverName;
     static private ArrayList<String> usersList = new ArrayList<String>();
     static private ArrayList<String> passList = new ArrayList<String>();
@@ -32,10 +33,9 @@ public class ClientHandler extends Thread{
             System.out.println("Client connected.");
             InputStreamReader streamReader = new InputStreamReader(socket.getInputStream());
             BufferedReader bufferReader = new BufferedReader(streamReader);
-            PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
+            printWriter = new PrintWriter(socket.getOutputStream(), true);
             printWriter.println("You are connect to the server. Comandi possibili: 1)calcola, 2) registrazione, 3) accesso, 4)data, 5) server, 6)stop, 7)esplodi");
             gestore(printWriter, bufferReader);
-            socket.close();
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -47,8 +47,7 @@ public class ClientHandler extends Thread{
             if (str.equals("calcola")) {
                 massaCorporea(printWriter,bufferedReader);
             }else if(str.equals("stop")){
-                printWriter.println("Disconnesso");
-                System.out.println("Client disconnected.");
+                stop(printWriter, bufferedReader);
                 return;
             }else if(str.equals("accesso")){
                 accesso(printWriter, bufferedReader);
@@ -67,13 +66,19 @@ public class ClientHandler extends Thread{
         }
     }
 
+    public static void stop(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
+        printWriter.println("Disconnesso");
+        System.out.println("Client disconnected.");
+        socket.close();
+    }
+
+
     public static void clientsCloser(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
-        printWriter.println("Chiusura di tutti i client");
-        for (int i = 0; i < handlerList.size(); i++) {
-            handlerList.get(i).getSocket().close();
-            System.out.println("Client disconnected.");
+        for (ClientHandler  client: handlerList) {
+            System.out.println(client.getSocket());
+            client.printWriter.println("Client disconnected.");
         }
-        return;
+        return; 
     }
 
     public static void massaCorporea(PrintWriter printWriter, BufferedReader bufferedReader) throws Exception{
